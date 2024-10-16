@@ -1,8 +1,9 @@
 package channels
+
 import (
+	"fmt"
 	"testing"
 	"time"
-	"fmt"
 )
 
 func TestUnbuffered(t *testing.T) {
@@ -11,13 +12,30 @@ func TestUnbuffered(t *testing.T) {
 	go func() {
 		time.Sleep(1000 * time.Millisecond)
 		fmt.Println("go: Sending message")
-		ch <- 1
+		ch <- 1 // will block until the message is recieved
 		fmt.Println("go: Reciever recieved the message. Sending complete.")
 	}()
 
 	// wait for the goroutine to complete
 	fmt.Println("main: Waiting")
-	time.Sleep(3000 * time.Millisecond)
+	// time.Sleep(3000 * time.Millisecond)
+	<-ch
+	fmt.Println("main: Completed")
+}
+
+func TestUnbufferedClose(t *testing.T) {
+	ch := make(chan int)		// unbuffered channel - synchronous communication
+
+	go func() {
+		time.Sleep(1000 * time.Millisecond)
+		fmt.Println("go: Unblocking main.")
+		close(ch) // won't block here
+		fmt.Println("go: main is unblocked.")
+	}()
+
+	// wait for the goroutine to complete
+	fmt.Println("main: Waiting")
+	// time.Sleep(3000 * time.Millisecond)
 	<-ch
 	fmt.Println("main: Completed")
 }
